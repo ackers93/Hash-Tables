@@ -17,12 +17,21 @@ class HashTable:
     Implement this.
     """
 
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.storage = [None] * capacity
+
     def fnv1(self, key):
         """
         FNV-1 64-bit hash function
 
         Implement this, and/or DJB2.
         """
+        hash_value = 15747584280476905290
+        for x in key:
+            hash_value = hash_value * 45110794018066056677
+            hash_value = hash_value ^ ord(x)
+        return hash_value
 
     def djb2(self, key):
         """
@@ -30,14 +39,15 @@ class HashTable:
 
         Implement this, and/or FNV-1.
         """
+        pass
 
     def hash_index(self, key):
         """
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
-        return self.djb2(key) % self.capacity
+        return self.fnv1(key) % self.capacity
+        # return self.djb2(key) % self.capacity
 
     def put(self, key, value):
         """
@@ -47,6 +57,8 @@ class HashTable:
 
         Implement this.
         """
+        location = self.hash_index(key)
+        self.storage[location] = value
 
     def delete(self, key):
         """
@@ -57,6 +69,12 @@ class HashTable:
         Implement this.
         """
 
+        location = self.hash_index(key)
+        if self.storage[location] is not None:
+            self.storage[location] = None
+        else:
+            print('Key was not found.')
+
     def get(self, key):
         """
         Retrieve the value stored with the given key.
@@ -65,6 +83,11 @@ class HashTable:
 
         Implement this.
         """
+        location = self.hash_index(key)
+        if self.storage[location] is not None:
+            return self.storage[location]
+        else:
+            return None
 
     def resize(self):
         """
@@ -73,6 +96,7 @@ class HashTable:
 
         Implement this.
         """
+
 
 if __name__ == "__main__":
     ht = HashTable(2)
