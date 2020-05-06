@@ -39,15 +39,18 @@ class HashTable:
 
         Implement this, and/or FNV-1.
         """
-        pass
+        hash = 4587
+        for c in key:
+            hash = (hash * 33) + ord(c)
+        return hash & 0xffffffff
 
     def hash_index(self, key):
         """
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        return self.fnv1(key) % self.capacity
-        # return self.djb2(key) % self.capacity
+        # return self.fnv1(key) % self.capacity
+        return self.djb2(key) % self.capacity
 
     def put(self, key, value):
         """
@@ -57,8 +60,32 @@ class HashTable:
 
         Implement this.
         """
-        location = self.hash_index(key)
-        self.storage[location] = value
+        # find index based on key passed in
+        index = self.hash_index(key)
+        # check storage with index from above
+        existing_entry = self.storage[index]
+
+        new_entry = HashTableEntry(key, value)
+
+        # check to see if hash index exists
+        if existing_entry:
+            last_entry = None
+            # Look through hash index list
+            while existing_entry:
+                # search list for key
+                if existing_entry.key == key:
+                    # if existing key is found, replace it
+                    existing_entry.value = value
+                    return
+                # continue looking through list until None
+                last_entry = existing_entry
+                existing_entry = existing_entry.next
+            # if the existing entry is not found, add to the end of hash index list.
+            last_entry.next = new_entry
+
+        # If hash index doesn't exist, add new entry in that spot
+        else:
+            self.storage[index] = new_entry
 
     def delete(self, key):
         """
@@ -68,12 +95,31 @@ class HashTable:
 
         Implement this.
         """
+        # find index based on key passed in
+        index = self.hash_index(key)
+        # check storage with index
+        existing_entry = self.storage[index]
 
-        location = self.hash_index(key)
-        if self.storage[location] is not None:
-            self.storage[location] = None
+        # check to see if hash index exists:
+        if existing_entry:
+            last_entry = None
+            # look through this hash index list
+            while existing_entry:
+                # search list for key
+                if existing_entry.key == key:
+                    # if it matches the key, set the last entry's next in list to the next index
+                    # deletes but moves the following up
+                    if last_entry:
+                        last_entry.next = existing_entry.next
+                    else:
+                        # if nothing else in list, set the next hash index to current spot
+                        self.storage[index] = existing_entry.next
+                    # continue looking through list until None
+                    last_entry = existing_entry
+                    existing_entry = existing_entry.next
         else:
-            print('Key was not found.')
+            # key is found, print warning
+            print('no key found')
 
     def get(self, key):
         """
@@ -83,19 +129,43 @@ class HashTable:
 
         Implement this.
         """
-        location = self.hash_index(key)
-        if self.storage[location] is not None:
-            return self.storage[location]
+        # find index based on key being passed in
+        index = self.hash_index(key)
+        # check storage with above index
+        existing_entry = self.storage[index]
+
+        # check to see if that hash index exists
+        if existing_entry:
+            # look through this hash index list
+            while existing_entry:
+                # search list for key
+                if existing_entry.key == key:
+                    # if found, return value
+                    return existing_entry.value
+                    # continue looking through list until None
+                existing_entry = existing_entry.next
         else:
+            # key is not found, return None
             return None
 
-    def resize(self):
-        """
-        Doubles the capacity of the hash table and
-        rehash all key/value pairs.
+    # def resize(self):
+    #     """
+    #     Doubles the capacity of the hash table and
+    #     rehash all key/value pairs.
 
-        Implement this.
-        """
+    #     Implement this.
+    #     """
+    #     prev_storage = self.storage
+    #     # Double capacity
+    #     self.capacity *= 2
+    #     # Update storage with new capacity
+    #     self.storage = [None] * self.capacity
+
+    #     # Look through each key value pair in previous storage
+    #     for kvp in prev_storage:
+    #         # If KeyValuePair exist:
+    #         if kvp:
+    #             self.put(kvp.key, kvp.value)
 
 
 if __name__ == "__main__":
@@ -113,11 +183,11 @@ if __name__ == "__main__":
     print(ht.get("line_3"))
 
     # Test resizing
-    old_capacity = len(ht.storage)
-    ht.resize()
-    new_capacity = len(ht.storage)
+    # old_capacity = len(ht.storage)
+    # ht.resize()
+    # new_capacity = len(ht.storage)
 
-    print(f"\nResized from {old_capacity} to {new_capacity}.\n")
+    # print(f"\nResized from {old_capacity} to {new_capacity}.\n")
 
     # Test if data intact after resizing
     print(ht.get("line_1"))
