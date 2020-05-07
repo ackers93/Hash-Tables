@@ -20,6 +20,7 @@ class HashTable:
     def __init__(self, capacity):
         self.capacity = capacity
         self.storage = [None] * capacity
+        self.elements = 0
 
     def fnv1(self, key):
         """
@@ -52,6 +53,10 @@ class HashTable:
         # return self.fnv1(key) % self.capacity
         return self.djb2(key) % self.capacity
 
+    def load_factor(self):
+        # Load Factor is number of elements in a list divided by the number of slots (capacity)
+        return self.elements/self.capacity
+
     def put(self, key, value):
         """
         Store the value with the given key.
@@ -82,10 +87,18 @@ class HashTable:
                 existing_entry = existing_entry.next
             # if the existing entry is not found, add to the end of hash index list.
             last_entry.next = new_entry
+            self.elements += 1
+            # automatically resize by double if load facto is greater than 0.7
+            if self.load_factor() > 0.7:
+                self.resize(self.capacity * 2)
 
         # If hash index doesn't exist, add new entry in that spot
         else:
             self.storage[index] = new_entry
+            self.elements += 1
+            # automatically resize by double if load facto is greater than 0.7
+            if self.load_factor() > 0.7:
+                self.resize(self.capacity * 2)
 
     def delete(self, key):
         """
@@ -148,24 +161,37 @@ class HashTable:
             # key is not found, return None
             return None
 
-    # def resize(self):
-    #     """
-    #     Doubles the capacity of the hash table and
-    #     rehash all key/value pairs.
+    def resize(self, new_capacity):
+        """
+        Doubles the capacity of the hash table and
+        rehash all key/value pairs.
 
-    #     Implement this.
-    #     """
-    #     prev_storage = self.storage
-    #     # Double capacity
-    #     self.capacity *= 2
-    #     # Update storage with new capacity
-    #     self.storage = [None] * self.capacity
+        Implement this.
+        """
+        prev_storage = self.storage
 
-    #     # Look through each key value pair in previous storage
-    #     for kvp in prev_storage:
-    #         # If KeyValuePair exist:
-    #         if kvp:
-    #             self.put(kvp.key, kvp.value)
+        # Step 1: make a new, bigger table/array
+        # ....Update capacity on new capacity
+        # ....Update storage with new capacity
+
+        self.capacity = new_capacity
+        self.storage = [None] * new_capacity
+
+        # Step 2: go through all the old elements, and hash into the new list
+        # Look through each key value pair in previous storage
+        for i in range(len(prev_storage)):
+            # Check previous storage with i as index
+            existing_entry = prev_storage[i]
+
+            # Check to see if that hash index exists:
+            if existing_entry:
+                # Look through this hash index list
+                while existing_entry:
+                    if existing_entry.key:
+                        # If found, rehash to new storage
+                        self.put(existing_entry.key, existing_entry.value)
+                    # Continue looking through list until None
+                    existing_entry = existing_entry.next
 
 
 if __name__ == "__main__":
@@ -183,13 +209,13 @@ if __name__ == "__main__":
     print(ht.get("line_3"))
 
     # Test resizing
-    # old_capacity = len(ht.storage)
-    # ht.resize()
-    # new_capacity = len(ht.storage)
+    old_capacity = len(ht.storage)
+    ht.resize(1024)
+    new_capacity = len(ht.storage)
 
-    # print(f"\nResized from {old_capacity} to {new_capacity}.\n")
+    print(f"\nResized from {old_capacity} to {new_capacity}.\n")
 
-    # Test if data intact after resizing
+   # Test if data intact after resizing
     print(ht.get("line_1"))
     print(ht.get("line_2"))
     print(ht.get("line_3"))
